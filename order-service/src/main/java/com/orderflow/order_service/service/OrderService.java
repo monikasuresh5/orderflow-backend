@@ -23,6 +23,7 @@ public class OrderService {
 
     private static final String PRODUCT_SERVICE_URL = "http://localhost:8082/api/products";
 
+
     public Order placeOrder(Order order) {
         // Step 1: Fetch the product from Product Service
         Map<String, Object> product;
