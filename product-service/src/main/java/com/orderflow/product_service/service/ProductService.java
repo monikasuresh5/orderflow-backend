@@ -3,6 +3,8 @@ package com.orderflow.product_service.service;
 import com.orderflow.product_service.model.Product;
 import com.orderflow.product_service.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,51 +16,47 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    // Create a new product
     public Product createProduct(Product product) {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         return productRepository.save(product);
     }
 
-    // Get all products
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    // Get product by id
+    @Cacheable(value = "products", key = "#id")
     public Product getProductById(Long id) {
+        System.out.println(">>> [DATABASE HIT] Fetching product from PostgreSQL for ID: " + id);
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
     }
 
-    // Update product
+    @CacheEvict(value = "products", key = "#id")
     public Product updateProduct(Long id, Product updatedProduct) {
-        Product existingProduct = getProductById(id);
-
-        existingProduct.setName(updatedProduct.getName());
-        existingProduct.setDescription(updatedProduct.getDescription());
-        existingProduct.setPrice(updatedProduct.getPrice());
-        existingProduct.setStockQuantity(updatedProduct.getStockQuantity());
-        existingProduct.setUpdatedAt(LocalDateTime.now());
-
-        return productRepository.save(existingProduct);
+        Product existing = getProductById(id);
+        existing.setName(updatedProduct.getName());
+        existing.setDescription(updatedProduct.getDescription());
+        existing.setPrice(updatedProduct.getPrice());
+        existing.setStockQuantity(updatedProduct.getStockQuantity());
+        existing.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(existing);
     }
 
-    // Delete product
-    public void deleteProduct(Long id) {
-        Product product = getProductById(id);
-        productRepository.delete(product);
-    }
-
-    // Reduce stock (useful later for order-service calls)
-    public Product reduceStock(Long id, int quantity) {
+    @CacheEvict(value = "products", key = "#id")
+    public void reduceStock(Long id, Integer quantity) {
         Product product = getProductById(id);
         if (product.getStockQuantity() < quantity) {
             throw new RuntimeException("Insufficient stock for product id: " + id);
         }
         product.setStockQuantity(product.getStockQuantity() - quantity);
         product.setUpdatedAt(LocalDateTime.now());
-        return productRepository.save(product);
+        productRepository.save(product);
+    }
+
+    @CacheEvict(value = "products", key = "#id")
+    public void deleteProduct(Long id) {
+        productRepository.deleteById(id);
     }
 }
