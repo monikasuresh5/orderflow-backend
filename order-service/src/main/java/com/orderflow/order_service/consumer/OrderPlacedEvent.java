@@ -1,4 +1,4 @@
-package com.orderflow.order_service.dto;
+package com.orderflow.order_service.consumer;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -11,17 +11,19 @@ public class OrderPlacedEvent implements Serializable {
     private Long productId;
     private Integer quantity;
     private Double totalPrice;
+    private String status;
     private LocalDateTime timestamp;
 
     public OrderPlacedEvent() {
     }
 
-    public OrderPlacedEvent(Long orderId, Long userId, Long productId, Integer quantity, Double totalPrice) {
+    public OrderPlacedEvent(Long orderId, Long userId, Long productId, Integer quantity, Double totalPrice, String status) {
         this.orderId = orderId;
         this.userId = userId;
         this.productId = productId;
         this.quantity = quantity;
         this.totalPrice = totalPrice;
+        this.status = status;
         this.timestamp = LocalDateTime.now();
     }
 
@@ -63,6 +65,14 @@ public class OrderPlacedEvent implements Serializable {
 
     public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public LocalDateTime getTimestamp() {
