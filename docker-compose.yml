@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: orderflow-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: orderdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - orderflow-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: orderflow-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - orderflow-net
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: orderflow-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - orderflow-net
+
+volumes:
+  postgres_data:
+
+networks:
+  orderflow-net:
+    driver: bridge
